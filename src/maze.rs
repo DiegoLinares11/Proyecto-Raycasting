@@ -1,5 +1,7 @@
 use rand::seq::SliceRandom;
 use rand::Rng;
+use crate::framebuffer::Framebuffer;
+use crate::color::Color;
 
 pub struct Maze {
     pub width: usize,
@@ -89,7 +91,6 @@ impl Maze {
         last_line.push('+');
         maze.push(last_line);
 
-        // Colocar las letras 'p' y 'g' en las posiciones correspondientes
         if let Some(start_line) = maze.get_mut(self.start.0 * 2 + 1) {
             start_line.replace_range(self.start.1 * 3 + 1..self.start.1 * 3 + 2, "p");
         }
@@ -99,8 +100,58 @@ impl Maze {
 
         maze
     }
-}
+} 
 
 pub fn display_maze(maze: Vec<String>) -> String {
     maze.join("\n")
+}
+
+pub fn render_framebuffer(framebuffer: &mut Framebuffer, maze: &Maze) {
+    let block_size = 15; // Tamaño de cada bloque en píxeles
+
+    let rendered_maze = maze.render(); // Obtiene la representación en texto del laberinto
+
+    for (row, line) in rendered_maze.iter().enumerate() {
+        for (col, cell) in line.chars().enumerate() {
+            // Calcula las coordenadas de dibujo en base a la posición en el laberinto
+            let x = col * block_size; // Coordenada x en píxeles
+            let y = row * block_size; // Coordenada y en píxeles
+
+            // Dibuja solo si está dentro del rango del framebuffer
+            if x < framebuffer.get_width() && y < framebuffer.get_height() {
+                draw_cell(framebuffer, x, y, block_size, cell);
+            } else {
+                println!("Coordenadas fuera de rango: ({}, {})", x, y);
+            }
+        }
+    }
+}
+
+
+
+
+pub fn draw_cell(framebuffer: &mut Framebuffer, x: usize, y: usize, block_size: usize, cell: char) {
+
+
+    // Verificar si las coordenadas están dentro del rango
+    let max_x = framebuffer.get_width();
+    let max_y = framebuffer.get_height();
+
+    if x + block_size <= max_x && y + block_size <= max_y {
+        match cell {
+            ' ' => framebuffer.set_current_color(Color::new(255, 192, 203)), // Caminos (rosa)
+            '+' => framebuffer.set_current_color(Color::new(0, 0, 128)), // Paredes (azul oscuro)
+            'p' => framebuffer.set_current_color(Color::new(0, 255, 0)), // Inicio (verde)
+            'g' => framebuffer.set_current_color(Color::new(255, 0, 0)), // Meta (rojo)
+            _ => framebuffer.set_current_color(Color::new(255, 255, 255)), // Blanco para cualquier otro
+        }
+
+        for row in y..(y + block_size) {
+            for col in x..(x + block_size) {
+                framebuffer.point(col as isize, row as isize);
+            }
+        }
+    } else {
+        println!("Coordenadas fuera de rango: ({}, {})", x, y);
+    }
 }
