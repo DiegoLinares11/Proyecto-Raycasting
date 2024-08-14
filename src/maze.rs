@@ -6,7 +6,7 @@ use crate::color::Color;
 pub struct Maze {
     pub width: usize,
     pub height: usize,
-    vis: Vec<Vec<bool>>,
+    pub vis: Vec<Vec<bool>>,
     hor: Vec<Vec<bool>>,
     ver: Vec<Vec<bool>>,
     pub start: (usize, usize),
@@ -99,6 +99,10 @@ impl Maze {
         }
 
         maze
+    }
+
+    pub fn get_start_position(&self) -> (usize, usize) {
+        self.start
     }
 } 
 

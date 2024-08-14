@@ -8,11 +8,11 @@ use color::Color;
 use framebuffer::Framebuffer;
 use minifb::{Key, Window, WindowOptions};
 use player::Player;
-use raycasting::cast_ray;
+use raycasting::Raycasting;
 
 fn main() {
-    let width: usize = 12;
-    let height: usize = 8;
+    let width: usize = 22;
+    let height: usize = 18;
     let block_size: usize = 15;
 
     let mut maze = maze::Maze::new(width, height);
@@ -25,9 +25,18 @@ fn main() {
 
     maze::render_framebuffer(&mut framebuffer, &maze);
 
-    let mut player = Player::new(3.0 * block_size as f32, 3.0 * block_size as f32, std::f32::consts::PI / 3.0);
+    // Obtén la posición inicial desde el laberinto
+    let start_pos = maze.get_start_position();
 
-    cast_ray(&mut framebuffer, &maze.render(), &player, block_size);
+    // Inicializa el Player en la misma posición que 'p'
+    let mut player = Player::new(
+        start_pos.0 as f32 * block_size as f32, 
+        start_pos.1 as f32 * block_size as f32, 
+        std::f32::consts::PI / 3.0,
+        std::f32::consts::PI / 3.0,
+    );
+
+    let mut mode = "2D";
 
     let mut window = Window::new(
         "Rust Graphics - Maze Example",
@@ -40,6 +49,20 @@ fn main() {
     });
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
+        // Procesar eventos de entrada
+        player.process_events(&window);
+
+        // Limpiar el framebuffer
+        framebuffer.clear();
+
+        // Dibujar según el modo actual
+        if mode == "2D" {
+            Raycasting::render2d(&mut framebuffer, &player, &maze, block_size);
+        } else {
+            Raycasting::render3d(&mut framebuffer, &player, &maze, block_size);
+        }
+
+        // Actualizar la ventana con el contenido del framebuffer
         let buffer: Vec<u32> = framebuffer
             .get_buffer()
             .iter()
