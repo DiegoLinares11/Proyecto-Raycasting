@@ -29,7 +29,7 @@ impl Raycasting {
         framebuffer.point(player.pos.x as isize, player.pos.y as isize);
     }
 
-    pub fn render3d(framebuffer: &mut Framebuffer, player: &Player, maze: &Maze, block_size: usize) {
+    pub fn render3d(framebuffer: &mut Framebuffer, player: &Player, maze: &Maze, block_size: usize, texture: &Texture) {
         let hw = framebuffer.get_height() as f32 / 2.0; // Altura media del viewport
         let num_rays = framebuffer.get_width(); // Lanza un rayo por cada columna en el framebuffer
     
@@ -55,9 +55,16 @@ impl Raycasting {
             let stake_bottom = (hw + (stake_height / 2.0)).min(framebuffer.get_height() as f32) as usize;
     
             // Dibujar la stake en el framebuffer
+            // Renderizar la textura en lugar de un color sólido
+            let texture_x = (i as f32 / num_rays as f32 * texture.width() as f32) as u32;
             for y in stake_top..stake_bottom {
+                let texture_y = ((y as f32 - stake_top as f32) / (stake_bottom - stake_top) as f32 * texture.height() as f32) as u32;
+                let color = texture.get_color(texture_x, texture_y);
+                framebuffer.set_current_color(Color::new(color.0, color.1, color.2));
                 framebuffer.point(i as isize, y as isize);
             }
+           
+           
         }
     }
     
@@ -92,15 +99,14 @@ impl Raycasting {
                     }
                 }
             }
-        }
-    
+        } 
         // Dibujar al jugador en el minimapa
         framebuffer.set_current_color(Color::new(0, 0, 255));
     
         let player_mini_x = offset_x as isize + ((player.pos.x / (block_size * 3) as f32) * mini_scale as f32) as isize;
         let player_mini_y = offset_y as isize + ((player.pos.y / (block_size * 2) as f32) * mini_scale as f32) as isize;
-    
-        framebuffer.point(player_mini_x, player_mini_y);
+            
+       framebuffer.point(player_mini_x, player_mini_y);
     }
     
 

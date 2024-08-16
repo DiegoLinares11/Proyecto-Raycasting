@@ -1,4 +1,4 @@
-use image::GenericImageView;
+use image::{DynamicImage, GenericImageView};
 
 pub struct Texture {
     data: Vec<u8>,
@@ -7,6 +7,13 @@ pub struct Texture {
 }
 
 impl Texture {
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
     pub fn new(file_path: &str) -> Self {
         let img = image::open(file_path).expect("Failed to load texture");
         let (width, height) = img.dimensions();

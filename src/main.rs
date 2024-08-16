@@ -13,8 +13,8 @@ use raycasting::Raycasting;
 use texture::Texture;
 
 fn main() {
-    let width: usize = 10;
-    let height: usize = 6;
+    let width: usize = 8;
+    let height: usize = 4;
     let block_size: usize = 20;
 
     let mut maze = maze::Maze::new(width, height);
@@ -37,6 +37,9 @@ fn main() {
     );
 
     let mut mode = "2D";  // Modo inicial
+
+    // Cargar la textura para las paredes
+    let wall_texture = Texture::new("assets/lavaImage.png");
 
     let mut window = Window::new(
         "Rust Graphics - Maze Example",
@@ -63,7 +66,7 @@ fn main() {
         if mode == "2D" {
             Raycasting::render2d(&mut framebuffer, &player, &maze, block_size);
         } else {
-            Raycasting::render3d(&mut framebuffer, &player, &maze, block_size);
+            Raycasting::render3d(&mut framebuffer, &player, &maze, block_size, &wall_texture);
         }
 
         // Renderizar el minimapa en la esquina superior izquierda
