@@ -6,7 +6,7 @@ pub mod bmp;
 pub mod maze;
 pub mod player;
 pub mod raycasting;
-
+pub mod texture;
 
 pub use color::Color;
 pub use framebuffer::Framebuffer;
@@ -16,3 +16,4 @@ pub use vertex::Vertex;
 pub  use maze::Maze;
 pub use player::Player;
 pub use raycasting::Raycasting;
+pub use texture::Texture;

@@ -97,6 +97,7 @@ impl Maze {
         if let Some(end_line) = maze.get_mut(self.end.0 * 2 + 1) {
             end_line.replace_range(self.end.1 * 3 + 1..self.end.1 * 3 + 2, "g");
         }
+        
 
         maze
     }
@@ -111,7 +112,7 @@ pub fn display_maze(maze: Vec<String>) -> String {
 }
 
 pub fn render_framebuffer(framebuffer: &mut Framebuffer, maze: &Maze) {
-    let block_size = 15; // Tamaño de cada bloque en píxeles
+    let block_size = 20; // Tamaño de cada bloque en píxeles
 
     let rendered_maze = maze.render(); // Obtiene la representación en texto del laberinto
 
