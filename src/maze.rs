@@ -112,7 +112,7 @@ pub fn display_maze(maze: Vec<String>) -> String {
 }
 
 pub fn render_framebuffer(framebuffer: &mut Framebuffer, maze: &Maze) {
-    let block_size = 20; // Tamaño de cada bloque en píxeles
+    let block_size = 5; // Tamaño de cada bloque en píxeles
 
     let rendered_maze = maze.render(); // Obtiene la representación en texto del laberinto
 

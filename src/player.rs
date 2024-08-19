@@ -18,8 +18,8 @@ impl Player {
     }
 
     pub fn process_events(&mut self, window: &Window, maze: &[String], block_size: usize) {
-        const MOVE_SPEED: f32 = 2.0;
-        const ROTATION_SPEED: f32 = std::f32::consts::PI / 30.0;
+        const MOVE_SPEED: f32 = 1.0;
+        const ROTATION_SPEED: f32 = std::f32::consts::PI / 60.0;
 
         let mut new_pos = self.pos; // Copiamos la posición actual del jugador
 

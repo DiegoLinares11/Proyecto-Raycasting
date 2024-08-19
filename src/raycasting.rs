@@ -3,7 +3,8 @@ use crate::player::Player;
 use crate::maze;
 use crate::color::Color;
 use crate::maze::Maze;
-use crate::texture::Texture;  
+use crate::texture::Texture;
+use minifb::MouseMode;
 
 pub struct Raycasting;
 
@@ -29,87 +30,109 @@ impl Raycasting {
         framebuffer.point(player.pos.x as isize, player.pos.y as isize);
     }
 
-    pub fn render3d(framebuffer: &mut Framebuffer, player: &Player, maze: &Maze, block_size: usize, texture: &Texture) {
+    pub fn render3d(
+        framebuffer: &mut Framebuffer,
+        player: &Player,
+        maze: &Maze,
+        block_size: usize,
+        wall_texture: &Texture,
+        floor_texture: &Texture,
+        ceiling_texture: &Texture, // Nueva textura para el cielo
+    ) {
         let hw = framebuffer.get_height() as f32 / 2.0; // Altura media del viewport
         let num_rays = framebuffer.get_width(); // Lanza un rayo por cada columna en el framebuffer
     
-        framebuffer.set_current_color(Color::new(255, 255, 255)); // Asignar color blanco
+        // Campo de visión más común
+        let fov = std::f32::consts::PI / 3.0; // 60 grados
+        let distance_to_projection_plane = (framebuffer.get_width() as f32 / 2.0) / (fov / 2.0).tan();
     
         for i in 0..num_rays {
-            // Calcular el ángulo del rayo actual
             let current_ray = i as f32 / num_rays as f32;
-            let a = player.a - (player.fov / 2.0) + (player.fov * current_ray);
+            let a = player.a - (fov / 2.0) + (fov * current_ray);
     
-            // Lanza el rayo y obtén la intersección
             let intersect = Raycasting::cast_ray(framebuffer, maze, player, a, block_size, false);
-    
-            // Calcular la distancia a la pared
             let distance_to_wall = intersect.distance;
     
-            // Calcula la altura de la stake
-            let distance_to_projection_plane = 1.0; // Puedes ajustar esto para modificar la perspectiva
-            let stake_height = (hw / distance_to_wall) * distance_to_projection_plane;
+            // Corregir el efecto de "fish-eye" dividiendo la distancia por el coseno del ángulo del rayo
+            let corrected_distance_to_wall = distance_to_wall * (player.a - a).cos();
     
-            // Calcular la posición para dibujar la stake
+            // Calcular la altura de la stake
+            let stake_height = (block_size as f32 * distance_to_projection_plane) / corrected_distance_to_wall;
             let stake_top = (hw - (stake_height / 2.0)).max(0.0) as usize;
             let stake_bottom = (hw + (stake_height / 2.0)).min(framebuffer.get_height() as f32) as usize;
     
-            // Dibujar la stake en el framebuffer
-            // Renderizar la textura en lugar de un color sólido
-            let texture_x = (i as f32 / num_rays as f32 * texture.width() as f32) as u32;
-            for y in stake_top..stake_bottom {
-                let texture_y = ((y as f32 - stake_top as f32) / (stake_bottom - stake_top) as f32 * texture.height() as f32) as u32;
-                let color = texture.get_color(texture_x, texture_y);
+            // Renderizar el cielo (por encima de la pared)
+            for y in 0..stake_top {
+                let texture_x = (i as f32 / num_rays as f32 * ceiling_texture.width() as f32) as u32;
+                let texture_y = (y as f32 / stake_top as f32 * ceiling_texture.height() as f32) as u32;
+                let color = ceiling_texture.get_color(texture_x, texture_y);
                 framebuffer.set_current_color(Color::new(color.0, color.1, color.2));
                 framebuffer.point(i as isize, y as isize);
             }
-           
-           
+    
+            // Renderizar la textura de la pared
+            let texture_x = (i as f32 / num_rays as f32 * wall_texture.width() as f32) as u32;
+            for y in stake_top..stake_bottom {
+                let texture_y = ((y as f32 - stake_top as f32) / (stake_bottom - stake_top) as f32 * wall_texture.height() as f32) as u32;
+                let color = wall_texture.get_color(texture_x, texture_y);
+                framebuffer.set_current_color(Color::new(color.0, color.1, color.2));
+                framebuffer.point(i as isize, y as isize);
+            }
+    
+            // Renderizar el suelo (por debajo de la pared)
+            for y in stake_bottom..framebuffer.get_height() {
+                let texture_x = (i as f32 / num_rays as f32 * floor_texture.width() as f32) as u32;
+                let texture_y = ((y as f32 - stake_bottom as f32) / (framebuffer.get_height() as f32 - stake_bottom as f32) * floor_texture.height() as f32) as u32;
+                let color = floor_texture.get_color(texture_x, texture_y);
+                framebuffer.set_current_color(Color::new(color.0, color.1, color.2));
+                framebuffer.point(i as isize, y as isize);
+            }
         }
     }
     
     
-
-    pub fn render_minimap(framebuffer: &mut Framebuffer, player: &Player, maze: &Maze, block_size: usize) {
-        let mini_scale = 4; // Escala del minimapa (ajusta según el tamaño que quieras)
-        let offset_x = 10;  // Offset del minimapa en la pantalla
-        let offset_y = 10;
     
-        // Dibujar el laberinto en el minimapa
-        let rendered_maze = maze.render(); // Renderiza el laberinto
+    
+
+    pub fn render_minimap(
+        framebuffer: &mut Framebuffer,
+        player: &Player,
+        maze: &Maze,
+        block_size: usize
+    ) {
+        let mini_scale = 4; // Escala del minimapa (ajusta según el tamaño que quieras)
+        let offset_x = framebuffer.get_width() as isize - (maze.width * mini_scale) as isize - 10;  // Offset para colocar el minimapa a la derecha
+        let offset_y = 10;  // Offset del minimapa en la pantalla
+    
         for j in 0..maze.height {
             for i in 0..maze.width {
-                // Obtén los caracteres que representan las paredes y los caminos
-                let cell = rendered_maze[j * 2 + 1].chars().nth(i * 3 + 1).unwrap();
+                let cell = maze.render()[j * 2 + 1].chars().nth(i * 3 + 1).unwrap();
                 let color = match cell {
-                    ' ' => Color::new(200, 200, 200), // Gris para caminos
-                    '+' | '-' | '|' => Color::new(0, 0, 0), // Negro para paredes
-                    'p' => Color::new(0, 255, 0), // Verde para el inicio
-                    'g' => Color::new(255, 0, 0), // Rojo para el objetivo
-                    _ => Color::new(255, 255, 255), // Blanco para cualquier otro
+                    ' ' => (200, 200, 200), // Gris para caminos sin textura
+                    '+' | '-' | '|' => (255, 255, 0), // Negro para las paredes
+                    'p' => (0, 255, 0), // Verde para el inicio
+                    'g' => (255, 0, 0), // Rojo para el objetivo
+                    _ => (255, 255, 255), // Blanco para cualquier otro
                 };
-                
     
-                framebuffer.set_current_color(color);
-                let mini_x = offset_x + i * mini_scale;
-                let mini_y = offset_y + j * mini_scale;
-                for y in mini_y..(mini_y + mini_scale) {
-                    for x in mini_x..(mini_x + mini_scale) {
-                        framebuffer.point(x as isize, y as isize);
+                framebuffer.set_current_color(Color::new(color.0, color.1, color.2));
+                let mini_x = offset_x + (i * mini_scale) as isize;
+                let mini_y = offset_y + (j * mini_scale) as isize;
+                for y in mini_y..(mini_y + mini_scale as isize) {
+                    for x in mini_x..(mini_x + mini_scale as isize) {
+                        framebuffer.point(x, y);
                     }
                 }
             }
-        } 
+        }
+    
         // Dibujar al jugador en el minimapa
         framebuffer.set_current_color(Color::new(0, 0, 255));
-    
-        let player_mini_x = offset_x as isize + ((player.pos.x / (block_size * 3) as f32) * mini_scale as f32) as isize;
-        let player_mini_y = offset_y as isize + ((player.pos.y / (block_size * 2) as f32) * mini_scale as f32) as isize;
-            
-       framebuffer.point(player_mini_x, player_mini_y);
+        let player_mini_x = offset_x + ((player.pos.x / (block_size * 3) as f32) * mini_scale as f32) as isize;
+        let player_mini_y = offset_y + ((player.pos.y / (block_size * 2) as f32) * mini_scale as f32) as isize;
+        framebuffer.point(player_mini_x, player_mini_y);
     }
     
-
     pub fn cast_ray(
         framebuffer: &mut Framebuffer,
         maze: &Maze,
@@ -153,5 +176,4 @@ impl Raycasting {
             d += 1.0; // Ajusta según sea necesario
         }
     }
-
 }

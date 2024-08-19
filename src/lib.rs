@@ -7,6 +7,7 @@ pub mod maze;
 pub mod player;
 pub mod raycasting;
 pub mod texture;
+pub mod text_renderer;
 
 pub use color::Color;
 pub use framebuffer::Framebuffer;
@@ -17,3 +18,4 @@ pub  use maze::Maze;
 pub use player::Player;
 pub use raycasting::Raycasting;
 pub use texture::Texture;
+pub use text_renderer::TextRenderer;

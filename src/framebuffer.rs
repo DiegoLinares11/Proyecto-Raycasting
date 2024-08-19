@@ -1,4 +1,5 @@
-use crate::Color;
+use crate::{Color};
+use crate::texture::Texture;
 
 pub struct Framebuffer {
     pub width: usize,
@@ -65,4 +66,23 @@ impl Framebuffer {
     pub fn get_height(&self) -> usize {
         self.height
     }
+
+    // pub fn render_texture(&mut self, texture: &Texture, x: usize, y: usize) {
+    //     let texture_width: usize = texture.width() as usize;
+    //     let texture_height: usize = texture.height() as usize;
+    
+    //     for j in 0..texture_height {
+    //         for i in 0..texture_width {
+    //             let color: (u8, u8, u8) = texture.get_color(i as u32, j as u32);
+    //             let target_x = x + i;
+    //             let target_y = y + j;
+    
+    //             if target_x < self.width && target_y < self.height {
+    //                 self.set_current_color(Color::new(color.0, color.1, color.2));
+    //                 self.point(target_x as isize, target_y as isize);
+    //             }
+    //         }
+    //     }
+    // }
+    
 }
