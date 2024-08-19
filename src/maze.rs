@@ -142,13 +142,14 @@ pub fn draw_cell(framebuffer: &mut Framebuffer, x: usize, y: usize, block_size: 
     let max_x = framebuffer.get_width();
     let max_y = framebuffer.get_height();
 
+
     if x + block_size <= max_x && y + block_size <= max_y {
         match cell {
             ' ' => framebuffer.set_current_color(Color::new(255, 192, 203)), // Caminos (rosa)
             '+' => framebuffer.set_current_color(Color::new(0, 0, 128)), // Paredes (azul oscuro)
             'p' => framebuffer.set_current_color(Color::new(0, 255, 0)), // Inicio (verde)
             'g' => framebuffer.set_current_color(Color::new(255, 0, 0)), // Meta (rojo)
-            _ => framebuffer.set_current_color(Color::new(255, 255, 255)), // Blanco para cualquier otro
+            _ => framebuffer.set_current_color(Color::new(0, 0, 128)), // Blanco para cualquier otro
         }
 
         for row in y..(y + block_size) {

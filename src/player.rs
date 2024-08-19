@@ -65,4 +65,10 @@ impl Player {
             }
         }
     }
+    pub fn check_collision_with_goal(&self, goal_position: (usize, usize), block_size: usize) -> bool {
+        let player_x = (self.pos.x / (block_size as f32 * 3.0)).floor() as usize;
+        let player_y = (self.pos.y / (block_size as f32 * 2.0)).floor() as usize;
+
+        player_x == goal_position.1 && player_y == goal_position.0
+    }
 }

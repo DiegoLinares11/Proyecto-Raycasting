@@ -17,7 +17,7 @@ use texture::Texture;
 use text_renderer::TextRenderer;
 
 fn main() {
-    let width: usize = 6;
+    let width: usize = 7;
     let height: usize = 4;
     let block_size: usize = 5;
 
@@ -43,9 +43,12 @@ fn main() {
     let mut mode = "2D";  // Modo inicial
 
     // Cargar las texturas
-    let wall_texture = Texture::new("assets/lavaImage.png");
-    let floor_texture = Texture::new("assets/sueloTest.png");
-    let ceiling_texture = Texture::new("assets/cieloTest.png");
+    let wall_texture = Texture::new("assets/muro.jpg");
+    let floor_texture = Texture::new("assets/Suelo.png");
+    let ceiling_texture = Texture::new("assets/lava.jpg");
+    let start_texture = Texture::new("assets/inicio.jpg");  // Textura para el punto inicial
+    let end_texture = Texture::new("assets/banderin.png");      // Textura para el punto final
+
 
 
 
@@ -88,6 +91,18 @@ fn main() {
         }
 
         player.process_events(&window, &maze.render(), block_size);
+        
+        if player.check_collision_with_goal(maze.end, block_size) {
+            // Regenerar el laberinto
+            maze.generate();
+            // Obtener la nueva posición inicial
+            let start_pos = maze.get_start_position();
+            player.pos = nalgebra_glm::vec2(
+                (start_pos.1 as f32 * 3.0 + 1.0) * block_size as f32,
+                (start_pos.0 as f32 * 2.0 + 1.0) * block_size as f32,
+            );
+        }
+        
     
         // Cambiar de modo si se presiona la tecla M
         if window.is_key_pressed(Key::M, minifb::KeyRepeat::No) {
@@ -108,7 +123,9 @@ fn main() {
                 block_size, 
                 &wall_texture, 
                 &floor_texture, 
-                &ceiling_texture
+                &ceiling_texture,
+                &start_texture,  // Añadir la textura del punto inicial
+                &end_texture     // Añadir la textura del punto final
             );
         }
 
